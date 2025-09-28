@@ -15,16 +15,15 @@ public class ProdutorConsumidorSemaforos {
     private static final int TAM_BUFFER = 5;
     private static final int[] buffer = new int[TAM_BUFFER];
     private static int in = 0, out = 0;
+
+    private static final Semaphore mutex = new Semaphore(1);
+    private static final Semaphore espacos = new Semaphore(TAM_BUFFER); //  começa com todos os espaços vazio
+    private static final Semaphore itens = new Semaphore(0); // começa sem itens
     
     private static final AtomicInteger contadorProduzidos = new AtomicInteger(0);
     private static final AtomicInteger contadorConsumidos = new AtomicInteger(0);
     private static final AtomicBoolean executando = new AtomicBoolean(true);
     private static final int TOTAL_OPERACOES = 20;
-
-    // Semáforos - ORDEM CORRETA: mutex primeiro
-    private static final Semaphore mutex = new Semaphore(1);
-    private static final Semaphore espacos = new Semaphore(TAM_BUFFER);
-    private static final Semaphore itens = new Semaphore(0);
 
     // Lock para sincronizar impressões
     private static final ReentrantLock lockImpressao = new ReentrantLock();
@@ -86,7 +85,7 @@ public class ProdutorConsumidorSemaforos {
             try {
                 int item = (int) (Math.random() * 100);
                 
-                // Simula tempo de producao ANTES de acessar regiao critica
+                // simula tempo de producao ANTES de acessar regiao critica
                 Thread.sleep((int) (Math.random() * 500));
 
                 imprimir(CYAN + "[PRODUTOR " + id + "] quer requisitar espaco para produzir: " + item + RESET);
@@ -161,8 +160,6 @@ public class ProdutorConsumidorSemaforos {
         imprimir("[CONSUMIDOR " + id + "] Finalizou");
     }
 
-
-    // ✅ MÉTODO PARA LOGAR OS SEMÁFOROS (como no seu código original)
     private static void logEstadoSemaforos(String contexto) {
         imprimir("[SEMAFOROS] " + contexto +
                 " | espacos: " + espacos.availablePermits() +
